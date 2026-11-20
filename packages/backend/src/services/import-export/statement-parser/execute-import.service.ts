@@ -37,6 +37,10 @@ interface ExecuteImportParams {
   skipIndices: number[];
   /** IANA timezone of the importing user's browser; extracted wall-clock times are read in it. */
   timezone?: string;
+  importSource?: ImportSource;
+  /** Captures durable row results before post-import categorization. */
+  onRowsCommitted?: (summary: StatementImportSummary) => void;
+  expectedSeamStart?: string | null;
   /**
    * Called with the cumulative `processedCount` after every row the loop visits
    * (imported, merged, skipped or failed alike) so the worker can fan progress out
@@ -63,13 +67,15 @@ async function executeImportImpl({
   skipIndices,
   timezone,
   onProgress,
+  importSource = ImportSource.statementParser,
+  expectedSeamStart,
   openImportBatch,
 }: ExecuteImportParams & { openImportBatch: OpenImportBatch }): Promise<StatementImportSummary> {
   const batchId = uuidv4();
   const importDetails: TransactionImportDetails = {
     batchId,
     importedAt: new Date().toISOString(),
-    source: ImportSource.statementParser,
+    source: importSource,
   };
 
   // Filter out transactions that should be skipped
@@ -136,7 +142,11 @@ async function executeImportImpl({
   await assertBankLinksUnchanged({
     userId,
     accountIds: [accountId],
-    seamStartByAccountId: new Map(seamStart ? [[accountId, seamStart]] : []),
+    seamStartByAccountId: new Map(
+      expectedSeamStart !== undefined
+        ? expectedSeamStart ? [[accountId, new Date(expectedSeamStart)]] : []
+        : seamStart ? [[accountId, seamStart]] : [],
+    ),
   });
 
   for (let i = 0; i < transactions.length; i++) {
@@ -231,7 +241,9 @@ async function executeImportImpl({
     } catch (error) {
       logger.warn('[Statement Parser] Import row failed', {
         transactionIndex: i,
-        reason: error instanceof Error ? error.message : String(error),
+        ...(importSource !== ImportSource.bankStatement
+          ? { reason: error instanceof Error ? error.message : String(error) }
+          : {}),
       });
       errors.push({ transactionIndex: i, code: 'ROW_FAILED' });
     } finally {
@@ -245,7 +257,7 @@ async function executeImportImpl({
   if (newTransactionIds.length > 0) {
     trackImportCompleted({
       userId,
-      importType: 'statement_parser',
+      importType: importSource === ImportSource.bankStatement ? 'bank_statement' : 'statement_parser',
       transactionsCount: newTransactionIds.length,
     });
   }
@@ -269,6 +281,7 @@ const executeImportWithBatchRecord = withImportBatchRecord(executeImportImpl);
  */
 export async function executeImport(params: ExecuteImportParams): Promise<StatementImportSummary> {
   const result = await executeImportWithBatchRecord(params);
+  params.onRowsCommitted?.(result);
 
   // Queue AI categorization for the newly imported transactions. Each row was
   // committed by its own createTransaction call above, so the queued ids point

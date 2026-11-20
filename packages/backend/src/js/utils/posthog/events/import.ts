@@ -1,6 +1,6 @@
 import { trackEvent } from '../index';
 
-type ImportType = 'csv' | 'statement_parser';
+type ImportType = 'csv' | 'statement_parser' | 'bank_statement';
 
 /**
  * Track import completion.

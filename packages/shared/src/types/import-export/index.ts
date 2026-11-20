@@ -6,4 +6,5 @@ export * from './budget-bakers-wallet-import';
 export * from './ms-money-import';
 export * from './ofx-import';
 export * from './statement-parser';
+export * from './bank-statement-import';
 export * from './data-export';

@@ -31,6 +31,7 @@ export enum ImportSource {
   csv = 'csv',
   ynab = 'ynab',
   statementParser = 'statement-parser',
+  bankStatement = 'bank-statement',
   budgetBakersWallet = 'budget-bakers-wallet',
   msMoney = 'ms-money',
   ofx = 'ofx',
