@@ -380,15 +380,27 @@ describe('External bank statements HTTP API', () => {
       if (done.status === 'completed') {
         expect(done.summary).toMatchObject({ imported: 2, skipped: 1, failed: 0 });
         expect(done.summary.files).toHaveLength(2);
+        const history = await helpers.getBatchesHistory({ raw: true });
+        expect(history.totalCount).toBe(2);
+        expect(history.items).toHaveLength(2);
+        for (const importedFile of done.summary.files) {
+          const summary = importedFile.summary!;
+          const batch = history.items.find(({ batchId }) => batchId === summary.batchId);
+          expect(batch).toMatchObject({
+            source: ImportSource.bankStatement,
+            transactionCount: 1,
+            accountIds: [account.id],
+          });
+          const batchTransactions = await helpers.getTransactions({ batchId: summary.batchId, raw: true });
+          expect(batchTransactions.map(({ id }) => id).toSorted()).toEqual(summary.newTransactionIds.toSorted());
+          expect(batchTransactions).toHaveLength(1);
+        }
+        const transactions = await helpers.getTransactions({ raw: true });
+        expect(transactions).toHaveLength(2);
+        expect(transactions.map(({ id }) => id).toSorted()).toEqual(
+          done.summary.files.flatMap(({ summary }) => summary!.newTransactionIds).toSorted(),
+        );
       }
-      const transactions = await helpers.getTransactions({ raw: true });
-      expect(transactions).toHaveLength(2);
-      expect(
-        transactions.every(
-          (tx) =>
-            (tx.externalData?.importDetails as { source?: string } | undefined)?.source === ImportSource.bankStatement,
-        ),
-      ).toBe(true);
       expect(await bank.executeBankStatements({ payload, raw: true })).toEqual({ jobId });
       expect((await bank.executeBankStatements({ payload: { ...payload, files: [files[0]!] } })).statusCode).toBe(409);
       const status = await bank.bankStatementStatus({ jobId });
