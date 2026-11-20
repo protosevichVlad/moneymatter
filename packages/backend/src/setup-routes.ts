@@ -27,6 +27,7 @@ import exchangeRatesRoutes from './routes/exchange-rates';
 import githubRoutes from './routes/github.route';
 import goalsRoutes from './routes/goals.route';
 import aiMappingRoutes from './routes/import-export/ai-mapping.route';
+import bankStatementRoutes from './routes/import-export/bank-statements.route';
 import batchesRoutes from './routes/import-export/batches.route';
 import budgetBakersWalletImportRoutes from './routes/import-export/budget-bakers-wallet.route';
 import csvImportExportRoutes from './routes/import-export/csv.route';
@@ -207,6 +208,7 @@ export function setupRoutes(app: Express) {
   app.use(`${API_PREFIX}/investments`, investmentsRoutes);
   app.use(`${API_PREFIX}/venture`, ventureRoutes);
   app.use('/mcp', mcpRoutes);
+  app.use(`${API_PREFIX}/import/bank-statements`, bankStatementRoutes);
   app.use(`${API_PREFIX}/import`, csvImportExportRoutes);
   app.use(`${API_PREFIX}/import`, statementParserRoutes);
   app.use(`${API_PREFIX}/import`, ynabImportRoutes);

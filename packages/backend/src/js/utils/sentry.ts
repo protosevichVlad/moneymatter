@@ -74,8 +74,21 @@ export function initSentry(): void {
     environment: process.env.NODE_ENV,
     debug: process.env.SENTRY_DEBUG === 'true',
     tracesSampler: ({ name, inheritOrSampleWith }) =>
-      isUntracedPollingTransaction({ name }) ? 0 : inheritOrSampleWith(tracesSampleRate),
+      name.includes('/import/bank-statements/') ||
+      name.includes('bank-statement-import') ||
+      isUntracedPollingTransaction({ name })
+        ? 0
+        : inheritOrSampleWith(tracesSampleRate),
     ignoreSpans: IGNORED_SPAN_PATTERNS,
+    // Statements and normalized transaction lists must never leave via diagnostics.
+    beforeSend: (event) => {
+      if (event.request?.url?.includes('/import/bank-statements/')) {
+        delete event.request.data;
+        delete event.extra;
+        delete event.breadcrumbs;
+      }
+      return event;
+    },
     // Integrations
     integrations: [
       // HTTP integration for tracing requests

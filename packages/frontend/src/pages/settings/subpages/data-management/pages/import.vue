@@ -90,6 +90,7 @@ const groups: ImportGroup[] = [
     sources: [
       { id: 'textSource', icon: SparklesIcon, to: { name: ROUTES_NAMES.importStatement }, accent: true, badge: true },
       { id: 'csv', icon: FileSpreadsheetIcon, to: { name: ROUTES_NAMES.importCsv } },
+      { id: 'bankStatements', icon: FileTextIcon, to: { name: ROUTES_NAMES.importBankStatements } },
       { id: 'ofx', icon: FileTextIcon, to: { name: ROUTES_NAMES.importOfx } },
     ],
   },

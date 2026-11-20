@@ -94,9 +94,12 @@ export function useImportJobProgress<TProgress extends ImportJobProgress>({
   /** Guards the terminal callbacks against a double-fire when SSE and the poll
    *  both deliver the terminal state in the same tick. */
   let terminalHandled = false;
+  // Status requests can outlive a stopped watcher or a newly started job.
+  let generation = 0;
 
   /** Tears down both timers and the SSE listener. Idempotent. */
   function stop(): void {
+    generation++;
     if (pollHandle) {
       clearInterval(pollHandle);
       pollHandle = null;
@@ -126,6 +129,7 @@ export function useImportJobProgress<TProgress extends ImportJobProgress>({
    */
   function start({ initialProgress }: { initialProgress: TProgress }): void {
     stop();
+    const currentGeneration = generation;
     terminalHandled = false;
     jobId = initialProgress.jobId;
     progress.value = initialProgress;
@@ -150,7 +154,7 @@ export function useImportJobProgress<TProgress extends ImportJobProgress>({
       // `TProgress` at the type level — but every importer's payload is structurally
       // a `TProgress`, so the runtime shape matches.
       const payload = data as TProgress;
-      if (payload.jobId !== jobId) return;
+      if (currentGeneration !== generation || payload.jobId !== jobId) return;
       lastSseEventAt = Date.now();
       progress.value = payload;
       if (payload.status === 'completed' || payload.status === 'failed') {
@@ -165,12 +169,14 @@ export function useImportJobProgress<TProgress extends ImportJobProgress>({
       if (!jobId || Date.now() - lastSseEventAt < SSE_STALL_THRESHOLD_MS) return;
       try {
         const update = await fetchStatus({ jobId });
+        if (currentGeneration !== generation) return;
         consecutivePollFailures = 0;
         progress.value = update;
         if (update.status === 'completed' || update.status === 'failed') {
           handleTerminal(update);
         }
       } catch (err) {
+        if (currentGeneration !== generation) return;
         // A 404 means the job no longer exists — it aged out of retention after
         // finishing rather than failing in flight. Treating that as a transient
         // failure would bounce the user back and discard a possibly-successful

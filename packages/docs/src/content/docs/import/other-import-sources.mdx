@@ -18,6 +18,7 @@ All of them are in the same place: click the gear button (**Settings**), then un
 | You have | Use | Can add to accounts you already have? |
 |---|---|---|
 | A bank statement as a PDF, a receipt or screenshot, or text from an email | [Import from any Text Source](#import-from-any-text-source) | Yes |
+| Statements from a bank supported by the external parsing service | [Bank statements](#bank-statements-via-an-external-service) | Yes |
 | A CSV file from your bank | [Import CSV](/import/import-from-csv/) | Yes |
 | An .ofx or .qfx file from your bank | [OFX or QFX statement](#ofx-or-qfx-statement) | Yes |
 | Your YNAB budget | [Import from YNAB](#ynab) | No, it always creates new accounts |
@@ -26,6 +27,22 @@ All of them are in the same place: click the gear button (**Settings**), then un
 | Apple Pay taps, bank SMS or bank notifications on iPhone | [Payment automations](/iphone/payment-automations/) | Yes |
 
 Don't see your app? Click **Want more options? Request here** at the bottom of the **From other apps** list to ask for it on the roadmap.
+
+## Bank statements via an external service
+
+Choose **Bank statements** on the **Import** tab to import several statements through a bank-specific parsing provider. This is separate from the AI importer below and does not require selecting an AI model.
+
+Your MoneyMatter administrator must configure the parsing service first. If it is not configured or is unavailable, the page explains why you cannot continue. Available banks and file formats come from that service. ImportHelper's current API accepts PDF; other formats become available when the service supports and advertises them. MoneyMatter does not parse or convert these files locally.
+
+- Add up to **20 files**, each no larger than **10 MiB**, with up to **50,000 transactions** across the batch.
+- Select a parsing provider and an existing MoneyMatter account for each file. Each transaction's currency must match that account; this importer does not convert currencies.
+- The files are sent to the external service for recognition. Do not upload statements unless you trust the service configured by your administrator.
+- If one file fails, retry it or remove it before continuing with the successfully recognized files. An empty statement is a valid result.
+- Review possible duplicates against your existing transactions and between files in the batch. A possible match is not proof: check which rows to skip before confirming.
+- Transactions owned by a connected bank from its linking date onward are excluded according to the account's import restrictions.
+- After confirmation, the import runs in the background. Results show imported, merged, skipped and failed operations. Imported operations affect the account's balance and are recorded in **Import History**.
+
+Unconfirmed files and review choices are not saved as a draft. Leaving or reloading the page discards that unfinished work; an import that has already started continues in the background.
 
 ## Import from any Text Source
 

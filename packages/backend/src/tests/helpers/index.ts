@@ -56,3 +56,5 @@ export * from './background-jobs';
 export * from './landing-faq';
 export * from './reconciliation';
 export * from './transactions-trash';
+
+export * from './bank-statements';

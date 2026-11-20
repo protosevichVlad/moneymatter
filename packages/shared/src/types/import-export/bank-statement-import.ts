@@ -64,6 +64,8 @@ export interface BankStatementExecuteRequest extends BankStatementReviewRequest 
   /** Stable across retries of one explicit confirmation. */
   requestId: string;
   skipRows: { fileId: string; transactionIndex: number }[];
+  /** Must match the reviewed seam exclusions before a job may write. */
+  bankSeamRows: { fileId: string; transactionIndex: number }[];
 }
 
 export interface BankStatementFileSummary {

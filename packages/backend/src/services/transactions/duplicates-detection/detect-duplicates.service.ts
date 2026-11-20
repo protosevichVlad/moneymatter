@@ -42,6 +42,8 @@ interface DetectDuplicatesParams<T extends TransactionToCheck> {
   accountId: string;
   /** Transactions to check for duplicates */
   transactions: T[];
+  /** Batch review must not silently omit existing rows beyond the interactive cap. */
+  requireComplete?: boolean;
 }
 
 /**
@@ -85,6 +87,7 @@ export async function detectDuplicates<T extends TransactionToCheck>({
   userId,
   accountId,
   transactions,
+  requireComplete = false,
 }: DetectDuplicatesParams<T>): Promise<DuplicateMatch<T>[]> {
   const duplicates: DuplicateMatch<T>[] = [];
 
@@ -109,7 +112,7 @@ export async function detectDuplicates<T extends TransactionToCheck>({
     accountIds: [accountId],
     startDate: minDate,
     endDate: endDateStr,
-    completeness: { cap: { limit: 10000, onTruncated: 'log' } },
+    completeness: requireComplete ? 'all' : { cap: { limit: 10000, onTruncated: 'log' } },
     // Planned rows are merge targets for incoming rows, not duplicates of them.
     planned: 'exclude',
     // A balance adjustment is a real stored row an import can land on top of, so it stays

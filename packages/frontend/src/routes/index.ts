@@ -418,6 +418,19 @@ const routes: RouteRecordRaw[] = [
             meta: { i18nChunks: ['settings/data-management'] },
           },
           {
+            path: 'data-management/import/bank-statements',
+            name: ROUTES_NAMES.importBankStatements,
+            component: () => import('@/pages/import-export/bank-statements/index.vue'),
+            meta: {
+              i18nChunks: [
+                'pages/import-bank-statements',
+                'pages/import-statement',
+                'pages/import-shared',
+                'settings/data-management',
+              ],
+            },
+          },
+          {
             path: 'data-management/import/csv',
             name: ROUTES_NAMES.importCsv,
             component: () => import('@/pages/import-export/csv-import.vue'),

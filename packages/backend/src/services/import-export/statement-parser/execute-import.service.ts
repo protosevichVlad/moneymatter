@@ -144,8 +144,12 @@ async function executeImportImpl({
     accountIds: [accountId],
     seamStartByAccountId: new Map(
       expectedSeamStart !== undefined
-        ? expectedSeamStart ? [[accountId, new Date(expectedSeamStart)]] : []
-        : seamStart ? [[accountId, seamStart]] : [],
+        ? expectedSeamStart
+          ? [[accountId, new Date(expectedSeamStart)]]
+          : []
+        : seamStart
+          ? [[accountId, seamStart]]
+          : [],
     ),
   });
 

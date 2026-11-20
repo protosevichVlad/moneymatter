@@ -119,6 +119,8 @@ interface CreateImportJobQueueParams<
    *  The default tells the user to undo the partial import before retrying, so a
    *  job that rolls back as a whole must pass its own key. */
   interruptedMessageKey?: string;
+  /** Drop sensitive source data as soon as processing settles; retain only ownership. */
+  clearSourceDataOnSettled?: boolean;
 }
 
 interface ImportJobQueueBundle<TJobData extends SentryTraceData, TSummary, TProgress extends SSEEventPayload> {
@@ -183,6 +185,7 @@ export function createImportJobQueue<
   logLabel,
   processJob,
   interruptedMessageKey = 'importExport.importInterruptedByServerUpdate',
+  clearSourceDataOnSettled = false,
   buildRunningPayload: providedBuildRunningPayload,
   buildCompletedPayload: providedBuildCompletedPayload,
   buildFailedPayload: providedBuildFailedPayload,
@@ -302,6 +305,10 @@ export function createImportJobQueue<
             );
         }
         throw err;
+      } finally {
+        if (clearSourceDataOnSettled) {
+          await job.updateData({ userId: job.data.userId } as TJobData);
+        }
       }
     },
     {
@@ -327,6 +334,11 @@ export function createImportJobQueue<
     isStalledPastLimitFailure({ reason }) ? ({ code: 'interrupted' } satisfies ImportJobFailure) : failure;
 
   worker.on('failed', (job, err) => {
+    if (clearSourceDataOnSettled && job) {
+      void job.updateData({ userId: job.data.userId } as TJobData).catch(() => {
+        logger.error({ message: `[${logLabel} Worker] Failed to clear source data` });
+      });
+    }
     // Every deploy that restarts the process mid-job ends here, so it is not an error.
     if (isStalledPastLimitFailure({ reason: err.message })) {
       logger.warn(`[${logLabel} Worker] Job failed as stalled: its worker died or lost the job lock`, {

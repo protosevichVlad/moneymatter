@@ -34,6 +34,7 @@ const I18N_CHUNKS = [
   'pages/venture',
   'pages/import-csv',
   'pages/import-statement',
+  'pages/import-bank-statements',
   'pages/import-ynab',
   'pages/import-history',
   'pages/import-budget-bakers-wallet',

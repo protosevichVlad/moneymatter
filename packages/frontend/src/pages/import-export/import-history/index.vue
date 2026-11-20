@@ -212,6 +212,7 @@ const SOURCE_ID_MAP: Record<ImportSource, string> = {
   [ImportSource.csv]: 'csv',
   [ImportSource.ynab]: 'ynab',
   [ImportSource.statementParser]: 'textSource',
+  [ImportSource.bankStatement]: 'bankStatements',
   [ImportSource.budgetBakersWallet]: 'budget-bakers-wallet',
   [ImportSource.msMoney]: 'ms-money',
   [ImportSource.ofx]: 'ofx',

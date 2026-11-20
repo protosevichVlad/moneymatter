@@ -18,6 +18,10 @@ import { accountSyncQueue, accountSyncWorker } from '@services/bank-data-provide
 import { logoResolutionQueue, logoResolutionWorker } from '@services/brand-logos';
 import { baseCurrencyChangeQueue, baseCurrencyChangeWorker } from '@services/currencies/base-currency-change-queue';
 import {
+  bankStatementImportQueue,
+  bankStatementImportWorker,
+} from '@services/import-export/bank-statements/import-queue';
+import {
   budgetBakersWalletImportQueue,
   budgetBakersWalletImportWorker,
 } from '@services/import-export/budget-bakers-wallet-import';
@@ -497,6 +501,8 @@ async function closeAllE2eResources() {
     await ofxImportQueue.close();
     await csvImportWorker.close();
     await csvImportQueue.close();
+    await bankStatementImportWorker.close();
+    await bankStatementImportQueue.close();
     await statementImportWorker.close();
     await statementImportQueue.close();
     await backupRestoreWorker.close();

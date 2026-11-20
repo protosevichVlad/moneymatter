@@ -482,6 +482,12 @@
     "crossCurrencyLink": "Account {{account}} cannot be linked across currencies."
   },
   "importExport": {
+    "bankStatements": {
+      "providerUnavailable": "The external bank statement parser is unavailable. Try again later.",
+      "invalidStatement": "This statement cannot be imported. Check the files, selected bank and target accounts, then try again.",
+      "requestAlreadyUsed": "This confirmation was already used for a different import. Review the statements again before starting a new import.",
+      "jobNotFound": "Bank statement import not found. It may have expired."
+    },
     "batchDeleteBankLinkedAccount": "This import can no longer be undone because its account is now connected to a bank. Deleting these transactions could throw off the synced balance.",
     "batchDeleteLinkedLoanTransfer": "This import is linked to a loan payment and can't be undone on its own. Enable \"also delete linked transfer transactions\" to remove it.",
     "batchDeleteInProgress": "An import batch is already being deleted. Wait for it to finish before starting another.",

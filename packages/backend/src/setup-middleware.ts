@@ -1,5 +1,7 @@
+import { API_ERROR_CODES, API_RESPONSE_STATUS } from '@bt/shared/types';
 import { isPerfDebugEnabled, perfDebugMiddleware } from '@common/lib/perf/perf-debug';
 import { resolveTrustedProxies, TRUSTED_PROXIES_ENV } from '@config/trusted-proxies';
+import { t } from '@i18n/index';
 import { logger } from '@js/utils/logger';
 import { setClientIpHeaderMiddleware } from '@middlewares/client-ip-header';
 import { requestIdMiddleware } from '@middlewares/request-id';
@@ -191,6 +193,30 @@ export function setupMiddleware(app: Express) {
       // base64 envelope inflates ~4/3, so a ~40MB zip needs this ceiling.
       '64mb': [`${API_PREFIX}/user/backup/restore`],
     };
+
+    // Statement payloads stay out of parser diagnostics, including malformed JSON errors.
+    const statementLimits: Record<string, number> = {
+      [`${API_PREFIX}/import/bank-statements/parse`]: 14 * 1024 * 1024,
+      [`${API_PREFIX}/import/bank-statements/review`]: 64 * 1024 * 1024,
+      [`${API_PREFIX}/import/bank-statements/execute`]: 64 * 1024 * 1024,
+    };
+    const statementLimit = statementLimits[req.path];
+    if (statementLimit) {
+      res.setHeader('Cache-Control', 'no-store');
+      return express.json({ limit: statementLimit })(req, res, (error) => {
+        if (!error) return next();
+        const status = error.status === 413 ? 413 : 400;
+        return res
+          .status(status)
+          .json({
+            status: API_RESPONSE_STATUS.error,
+            response: {
+              code: API_ERROR_CODES.validationError,
+              message: t({ key: 'importExport.bankStatements.invalidStatement' }),
+            },
+          });
+      });
+    }
 
     // For webhook paths, preserve raw body for signature verification
     // Use req.originalUrl to ensure we match the full path regardless of mounting
